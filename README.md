@@ -1,0 +1,1 @@
+# osud_civilizace
