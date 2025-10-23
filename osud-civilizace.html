@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Osud Civilizace</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Papyrus', 'Trebuchet MS', sans-serif;
+    background: linear-gradient(180deg, #0b0f1e, #1a1f3d);
+    color: #fff7e6;
+    text-align: center;
+    padding: 40px 10px;
+  }
+  h1 {
+    font-size: 32px;
+    color: #ffd966;
+    text-shadow: 1px 1px 4px #000;
+  }
+  .lead {
+    color: #d6c49f;
+    margin-bottom: 20px;
+    font-size: 16px;
+  }
+  .pyramida, .svitek {
+    display: inline-block;
+    margin: 20px;
+    cursor: pointer;
+    position: relative;
+  }
+  .pyramida img, .svitek img {
+    width: 120px;
+    transition: transform 0.6s ease;
+  }
+  .resultBox {
+    margin-top: 30px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 14px;
+    padding: 20px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left;
+    line-height: 1.6;
+  }
+  .highlight { color:#ffd966; font-weight:bold; }
+
+  /* částice kouře */
+  .smokeParticle {
+    position: absolute;
+    bottom: 0;
+    width: 10px;
+    height: 10px;
+    background: rgba(255,255,230,0.5);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: rise 2s forwards;
+  }
+  @keyframes rise {
+    0% { transform: translateY(0) scale(0.5); opacity:1; }
+    100% { transform: translateY(-120px) scale(1.5); opacity:0; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🏺 Osud Civilizace 🏺</h1>
+<p class="lead">Klikni na pyramidu a zjisti, kdo začne hru!<br>Klikni na svitek a zjisti, kdo balí brko!</p>
+
+<div class="pyramida" id="pyramida">
+  <img src="https://i.imgur.com/3p0x8zX.png" alt="Pyramida">
+</div>
+
+<div class="svitek" id="svitek">
+  <img src="https://i.imgur.com/2LjYQxv.png" alt="Svitek marihuany">
+</div>
+
+<div class="resultBox" id="result"></div>
+<div class="resultBox" id="resultBrko"></div>
+
+<script>
+const hraci = ["Murys","Víťa","Barča","Rasty"];
+const civilizace = ["Egypt","Řím","Vikingové","Řecko","Aztékové","Babylon","Čína","Persie","Japonsko","Mayové"];
+
+const hlaskyStart = [
+  "🎲 Osud rozhodl! Dnes začíná {name}, mocný stavitel impérií!",
+  "{name} byl povolán samotným Zeusem! První tah je jeho!",
+  "Bohové se shodli: první jde {name}! Ať dějiny pohnou!",
+  "{name}, velký vládce starověku, zahajuje dnešní hru!",
+  "Hvězdy ukázaly: {name} první! Historie začíná!",
+  "První tah patří {name} — nechť pyramida štěstí roste!",
+  "{name} vstupuje do dějin! Začíná jako první!"
+];
+
+const hlaskyBrko = [
+  "🎴 {name} dnes balí brko – ať {pronoun} to jde od ruky!",
+  "{name} se ujímá balení brka, velký stavitel musí umět všechno!",
+  "{name} připravuje brko – inspirace přichází s tabákem!",
+  "{name} dnes balí brko a připravuje ho pro ostatní civilizace!",
+  "Bohové rozhodli: {name} připraví brko — osud je těžký!",
+  "Dneska brko balí {name} — nechť se stane legendárním!"
+];
+
+function getRandom(array){ return array[Math.floor(Math.random()*array.length)]; }
+
+// vytvoří kouřové částice
+function createSmoke(parent, count=15){
+  for(let i=0;i<count;i++){
+    const p = document.createElement('div');
+    p.className = 'smokeParticle';
+    p.style.left = `${Math.random()*80+10}%`;
+    p.style.animationDuration = `${1.5 + Math.random()*1.5}s`;
+    parent.appendChild(p);
+    setTimeout(()=>{ parent.removeChild(p); }, 2000);
+  }
+}
+
+// losování startujícího hráče
+function losujStart(){
+  const startIndex = Math.floor(Math.random()*hraci.length);
+  const poradi = [];
+  for(let i=0;i<hraci.length;i++){
+    poradi.push(hraci[(startIndex+i)%hraci.length]);
+  }
+
+  // civilizace
+  const civCopy = [...civilizace];
+  const prirazeni = {};
+  poradi.forEach(hrac=>{
+    const idx = Math.floor(Math.random()*civCopy.length);
+    prirazeni[hrac] = civCopy.splice(idx,1)[0];
+  });
+
+  // hlaska
+  const hlaska = getRandom(hlaskyStart).replace("{name}",poradi[0]);
+
+  // animace kouře
+  createSmoke(document.getElementById("pyramida"), 20);
+
+  // výsledek
+  let html = `<h3>Startující hráč: <span class="highlight">${poradi[0]}</span></h3>`;
+  html += `<p>Pořadí hráčů po směru hodinových ručiček:</p><ol>`;
+  poradi.forEach(j=> html+=`<li>${j} (${prirazeni[j]})</li>`);
+  html += `</ol><p>${hlaska}</p>`;
+  document.getElementById("result").innerHTML = html;
+}
+
+// losování brko
+function losujBrko(){
+  const hrac = getRandom(hraci);
+  const pronoun = hrac==="Barča"?"jí":"mu";
+  const hlaska = getRandom(hlaskyBrko).replace("{name}",hrac).replace("{pronoun}",pronoun);
+
+  createSmoke(document.getElementById("svitek"), 15);
+
+  document.getElementById("resultBrko").innerHTML = `<h3>Balí brko: <span class="highlight">${hrac}</span></h3><p>${hlaska}</p>`;
+}
+
+document.getElementById("pyramida").addEventListener("click",losujStart);
+document.getElementById("svitek").addEventListener("click",losujBrko);
+</script>
+
+</body>
+</html>
